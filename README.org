@@ -1,0 +1,10 @@
+#+TITLE: EnosLib IPDPS Codes
+
+* Initial Setup
+Codes in this repository require Python 3.7. The repository relies on
+[[https://pipenv.readthedocs.io/en/latest/][~pipevn~]] to install dependencies and run code snippets.
+
+#+begin_src bash
+$ pipenv --python 3.7
+$ pipenv install
+#+end_src
