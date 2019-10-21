@@ -14,7 +14,7 @@ $ pipenv install
      : pipenv run python fig1.py
 - Fig. 2          :: Analyze Galera Protocol. Requires ~tcpdump~ and
      should be run as ~sudo~
-     : pipenv run python fig2.py
+     : sudo pipenv run python fig2.py
 - Fig. 3          :: Install MariaDB and Galera on ~database~ Hosts,
      and Sysbench on ~client~ Hosts.
      : pipenv run python fig3.py

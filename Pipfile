@@ -7,7 +7,7 @@ verify_ssl = true
 python_version = "3.7"
 
 [packages]
-enoslib = "==4.8.2"
+enoslib = "==4.8"
 scapy = {extras = ["basic"],version = "==2.4.3"}
 
 [scripts]
