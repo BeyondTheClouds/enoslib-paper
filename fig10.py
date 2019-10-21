@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 # Imports/Type defs
-from enoslib.api import run_command
 from enoslib.task import enostask
 from enoslib.host import Host
 from execo_engine import ParamSweeper, sweep
-
-from utils import DEFAULT_CONF, LOG
 
 import traceback
 from pathlib import Path
