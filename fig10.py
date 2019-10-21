@@ -8,6 +8,7 @@ from execo_engine import ParamSweeper, sweep
 import traceback
 from pathlib import Path
 
+from utils import LOG
 
 @enostask(new=True)
 def deploy(env=None):
