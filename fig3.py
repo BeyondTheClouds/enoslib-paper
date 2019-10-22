@@ -16,8 +16,8 @@ def contextualize(rs: Roles):
                 roles=rs)
 
 
-# Test it!
-with infra() as (_, _, roles):
-    LOG.info("Contextualize...")
-    contextualize(roles)
-    LOG.info("Finished!")
+if __name__ == '__main__':
+    with infra() as (_, roles, _):
+        LOG.info("Contextualize...")
+        contextualize(roles)
+        LOG.info("Finished!")

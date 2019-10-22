@@ -15,7 +15,8 @@ def contextualize(hosts: List[Host]):
 
 
 # Test it!
-with infra() as (hosts, _, _):
-    LOG.info("Contextualize...")
-    contextualize(hosts)
-    LOG.info("Finished!")
+if __name__ == '__main__':
+    with infra() as (hosts, _, _):
+        LOG.info("Contextualize...")
+        contextualize(hosts)
+        LOG.info("Finished!")

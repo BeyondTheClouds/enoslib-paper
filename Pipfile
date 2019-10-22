@@ -9,6 +9,7 @@ python_version = "3.7"
 [packages]
 enoslib = "==4.8"
 scapy = {extras = ["basic"],version = "==2.4.3"}
+pyroute2 = "==0.5.7"
 
 [scripts]
 # setup-aio  = "python ./setup-aio.py"

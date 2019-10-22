@@ -108,4 +108,20 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/python
+# Created by https://www.gitignore.io/api/ansible
+# Edit at https://www.gitignore.io/?templates=ansible
+
+### Ansible ###
+*.retry
+
+# End of https://www.gitignore.io/api/ansible
+
+
+# enoslib specifics
 Vagrantfile
+ansible/galera-inventory.ini
+_tmp_enos_/
+.vagrant/
+
+
+
