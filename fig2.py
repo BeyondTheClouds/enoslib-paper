@@ -1,28 +1,44 @@
 # -*- coding: utf-8 -*-
 
-# Imports/Type defs
+# Imports
+import inspect
 import scapy.all as scapy
+
+from enoslib.infra.enos_vagrant.configuration import Configuration
 
 from utils import (setup_galera, infra, lookup_net, ifname, Network,
                    LOG)
 
 
-# Code snippet
+# Fig Code
 def analyze_galera(net: Network):
-    # Sniff packet of Galera (stop after 10 packets)
+    '''Fig2. Analyze of the Galera protocol on the `net` Network.
+
+    This function builds a specific `filter` with the CIDR of the
+    `net` and prints TCP `packets` that are related to the Galera
+    communications.
+
+    '''
     scapy.sniff(
-        iface=ifname(net), count=10,
+        iface=ifname(net), count=10,  # Stop analysis after 10 packets
         filter=f'net {net["cidr"]} and tcp and port 4567',
         prn=lambda packet: packet.summary())
 
 
 # Test it!
 if __name__ == '__main__':
+    # Define the infrastructure: 2 machines, 1 net
+    conf = (Configuration()
+            .add_machine(flavour="tiny", number=2, roles=["database"])
+            .add_network(cidr="192.168.42.0/24", roles=["database"])
+            .finalize())
 
-    with infra() as (_, roles, networks):
+    # Setup the infra and call the `analyze_galera` function
+    with infra(conf) as (_, roles, networks):
         # First, install and configure active/active Galera
         setup_galera(roles, networks)
 
         # Then, analyze
-        LOG.info("Analyzing Galera Protocol...")
+        LOG.info(inspect.getsource(analyze_galera))
         analyze_galera(lookup_net(networks, "database"))
+        LOG.info("Finished!")

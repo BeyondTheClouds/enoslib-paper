@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
-# Imports/Type defs
+# Imports
+import inspect
+
 from enoslib.api import run_command
+from enoslib.infra.enos_vagrant.configuration import Configuration
 
 from utils import infra, Roles, LOG
 
 
-# Code snippet
+# Fig Code
 def contextualize(rs: Roles):
+    'Fig3. Install Galera on `database`, and Sysbench on `client` hosts.'
     run_command("apt install -y mariadb-server galera",
                 pattern_hosts="database",
                 roles=rs)
@@ -17,7 +21,16 @@ def contextualize(rs: Roles):
 
 
 if __name__ == '__main__':
-    with infra() as (_, roles, _):
-        LOG.info("Contextualize...")
+    # Define the infrastructure: 2 database machines, 2
+    # database/client machines, 1 net
+    conf = (Configuration()
+            .add_machine(flavour="tiny", number=2, roles=["database"])
+            .add_machine(flavour="tiny", number=2, roles=["database", "client"])
+            .add_network(cidr="192.168.42.0/24", roles=["database"])
+            .finalize())
+
+    # Setup the infra and call the `contextualize` function
+    with infra(conf) as (_, roles, _):
+        LOG.info(inspect.getsource(contextualize))
         contextualize(roles)
         LOG.info("Finished!")

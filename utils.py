@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from functools import wraps
 import logging
 import os
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Callable, Any
 
 from pyroute2 import NDB
 from pyroute2 import log as pyroute2log
@@ -36,20 +36,11 @@ def setup_galera(rs: Roles, nets: List[Network]):
 
 
 @contextmanager
-def infra():
-    'Provision and remove an infrastructure from Vagrant Libvirt.'
-    # Configuration for database, client and monitor machines
-    CONF = (Configuration()
-            .from_settings(backend="libvirt")
-            .add_machine(flavour="tiny", number=2, roles=["database", "monitored"])
-            .add_machine(flavour="tiny", number=2, roles=["database", "monitored", "client"])
-            .add_machine(flavour="tiny", number=1, roles=["aggregator"])
-            .add_network(cidr="192.168.42.0/24", roles=["database"])
-            .add_network(cidr="192.168.43.0/24", roles=["monitor"])
-            .finalize())
+def infra(conf: Configuration):
+    'Provision and remove a `conf` infrastructure from Vagrant.'
 
     # Get the Vagrant provider
-    vagrant_provider = Enos_vagrant(CONF)
+    vagrant_provider = Enos_vagrant(conf)
 
     # Setup the infra
     LOG.info("Provisioning machines...")

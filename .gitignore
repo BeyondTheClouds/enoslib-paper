@@ -119,7 +119,7 @@ dmypy.json
 
 # enoslib specifics
 Vagrantfile
-ansible/galera-inventory.ini
+ansible/*.ini
 _tmp_enos_/
 .vagrant/
 
