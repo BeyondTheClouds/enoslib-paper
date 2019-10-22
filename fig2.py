@@ -26,19 +26,19 @@ def analyze_galera(net: Network):
 
 
 # Test it!
-if __name__ == '__main__':
-    # Define the infrastructure: 2 machines, 1 net
-    conf = (Configuration()
-            .add_machine(flavour="tiny", number=2, roles=["database"])
-            .add_network(cidr="192.168.42.0/24", roles=["database"])
-            .finalize())
 
-    # Setup the infra and call the `analyze_galera` function
-    with infra(conf) as (_, roles, networks):
-        # First, install and configure active/active Galera
-        setup_galera(roles, networks)
+# Define the infrastructure: 2 machines, 1 net
+CONF = (Configuration()
+        .add_machine(flavour="tiny", number=2, roles=["database"])
+        .add_network(cidr="192.168.42.0/24", roles=["database"])
+        .finalize())
 
-        # Then, analyze
-        LOG.info(inspect.getsource(analyze_galera))
-        analyze_galera(lookup_net(networks, "database"))
-        LOG.info("Finished!")
+# Setup the infra and call the `analyze_galera` function
+with infra(CONF) as (_, roles, networks):
+    # First, install and configure active/active Galera
+    setup_galera(roles, networks)
+
+    # Then, analyze
+    LOG.info(inspect.getsource(analyze_galera))
+    analyze_galera(lookup_net(networks, "database"))
+    LOG.info("Finished!")

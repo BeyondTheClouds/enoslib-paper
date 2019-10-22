@@ -2,13 +2,15 @@ from contextlib import contextmanager
 from functools import wraps
 import logging
 import os
-from typing import Tuple, List, Dict, Callable, Any
+import shutil
+from typing import Tuple, List, Dict
 
 from pyroute2 import NDB
 from pyroute2 import log as pyroute2log
 
 from enoslib.host import Host
-from enoslib.api import play_on, run_ansible, generate_inventory
+from enoslib.api import (play_on, run_ansible, generate_inventory,
+                         gather_facts, discover_networks)
 from enoslib.infra.enos_vagrant.provider import Enos_vagrant
 from enoslib.infra.enos_vagrant.configuration import Configuration
 
@@ -27,12 +29,10 @@ Roles = Dict[Role, List[Host]]
 # Utils functions
 def setup_galera(rs: Roles, nets: List[Network]):
     '''Installs and configures Galera'''
-    inventory_path = 'ansible/galera-inventory.ini'
-    galera_ansible = 'ansible/deploy-galera.yml'
+    galera_ansible_path = 'ansible/deploy-galera.yml'
 
-    generate_inventory(rs, nets, inventory_path,
-                       check_networks=True)
-    run_ansible([galera_ansible], inventory_path, rs)
+    discover_networks(rs, nets)
+    run_ansible([galera_ansible_path], roles=rs)
 
 
 @contextmanager
@@ -55,11 +55,16 @@ def infra(conf: Configuration):
         # yield: Tuple[List[Host], Roles, List[Network]]
         yield hosts, roles, networks
     except Exception as e:
-        LOG.error(f"Unexpected error: {e}")
+        LOG.error(f'Unexpected error: {e}')
     finally:
         # Tear down the infra
-        LOG.info("Destroying machines...")
+        LOG.info('Destroying machines...')
         vagrant_provider.destroy()
+
+        tmp_enoslib_path = '_tmp_enos_'
+        LOG.info(f'Removing cache {tmp_enoslib_path}...')
+        if os.path.isdir(tmp_enoslib_path):
+            shutil.rmtree(tmp_enoslib_path)
 
 
 def lookup_net(nets: List[Network], r: Role) -> Network:

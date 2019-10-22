@@ -20,17 +20,18 @@ def contextualize(rs: Roles):
                 roles=rs)
 
 
-if __name__ == '__main__':
-    # Define the infrastructure: 2 database machines, 2
-    # database/client machines, 1 net
-    conf = (Configuration()
-            .add_machine(flavour="tiny", number=2, roles=["database"])
-            .add_machine(flavour="tiny", number=2, roles=["database", "client"])
-            .add_network(cidr="192.168.42.0/24", roles=["database"])
-            .finalize())
+# Test It!
 
-    # Setup the infra and call the `contextualize` function
-    with infra(conf) as (_, roles, _):
-        LOG.info(inspect.getsource(contextualize))
-        contextualize(roles)
-        LOG.info("Finished!")
+# Define the infrastructure: 2 database machines, 2
+# database/client machines, 1 net
+CONF = (Configuration()
+        .add_machine(flavour="tiny", number=2, roles=["database"])
+        .add_machine(flavour="tiny", number=2, roles=["database", "client"])
+        .add_network(cidr="192.168.42.0/24", roles=["database"])
+        .finalize())
+
+# Setup the infra and call the `contextualize` function
+with infra(CONF) as (_, roles, _):
+    LOG.info(inspect.getsource(contextualize))
+    contextualize(roles)
+    LOG.info("Finished!")

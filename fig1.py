@@ -23,15 +23,15 @@ def contextualize(hosts: List[Host]):
 
 
 # Test it!
-if __name__ == '__main__':
-    # Define the infrastructure: 2 machines, 1 net
-    conf = (Configuration()
-            .add_machine(flavour="tiny", number=2, roles=["database"])
-            .add_network(cidr="192.168.42.0/24", roles=["database"])
-            .finalize())
 
-    # Setup the infra and call the `contextualize` function
-    with infra(conf) as (hosts, _, _):
-        LOG.info(inspect.getsource(contextualize))
-        contextualize(hosts)
-        LOG.info("Finished!")
+# Define the infrastructure: 2 machines, 1 net
+CONF = (Configuration()
+        .add_machine(flavour="tiny", number=2, roles=["database"])
+        .add_network(cidr="192.168.42.0/24", roles=["database"])
+        .finalize())
+
+# Setup the infra and call the `contextualize` function
+with infra(CONF) as (hosts, _, _):
+    LOG.info(inspect.getsource(contextualize))
+    contextualize(hosts)
+    LOG.info("Finished!")
