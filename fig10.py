@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+
 # Imports/Type defs
 from enoslib.task import enostask
 from enoslib.host import Host
@@ -9,6 +9,7 @@ import traceback
 from pathlib import Path
 
 from utils import LOG
+
 
 @enostask(new=True)
 def deploy(env=None):
@@ -36,16 +37,16 @@ def destroy(env=None):
 # Iterate over a set of parameters
 parameters = {"param1": [1, 4], "param2": ["a", "b"]}
 sweeps = sweep(parameters)
-sweeper = ParamSweeper(persistence_dir=str(Path("sweeps")),
-                       sweeps=sweeps, 
-                       save_sweeps=True)      
+sweeper = ParamSweeper(
+    persistence_dir=str(Path("sweeps")), sweeps=sweeps, save_sweeps=True
+)
 parameter = sweeper.get_next()
 while parameter:
     try:
-       deploy(); 
-       bench(parameter); 
-       backup(); 
-       sweeper.done(parameter)
+        deploy()
+        bench(parameter)
+        backup()
+        sweeper.done(parameter)
     except Exception as e:
         traceback.print_exc()
         sweeper.skip(parameter)
