@@ -122,6 +122,9 @@ Vagrantfile
 ansible/*.ini
 _tmp_enos_/
 .vagrant/
+current
+sweeps
+enos_*/
 
 
 

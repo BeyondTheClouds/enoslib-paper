@@ -1,23 +1,66 @@
-#+TITLE: EnosLib IPDPS Codes
+#+TITLE: EnosLib IPDPS Programs
+
+/[[https://gitlab.inria.fr/discovery/enoslib][EnosLib]] is a Python library that helps researchers in developing/
+/their experimental artifacts and executing these artifacts over/
+/different infrastructures./
+
+This repository contains programs from the EnosLib paper for IPDPS 2019.
 
 * Initial Setup
-Codes in this repository require Python 3.7. The repository relies on
-[[https://pipenv.readthedocs.io/en/latest/][~pipevn~]] to install dependencies and run code snippets.
+Programs in this repository assume Python 3.7 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipevn]] to
+install dependencies and execute code snippets. It also require
+[[https://www.vagrantup.com/][Vagrant]] with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
 
+After installing the requirements do the following to test programs.
 #+begin_src bash
+$ git clone --depth 1 https://github.com/BeyondTheClouds/enoslib-ipdps.git
+$ cd enoslib-ipdps/
 $ pipenv --python 3.7
 $ pipenv install
 #+end_src
 
-* Programs
-- Fig. 1          :: Install MariaDB and Galera Globally
+* Test Programs
+- Fig. 1          :: Defines a ~contextualize~ function that installs
+     MariaDB and Galera on a list of ~Host~​s.
+
+     A ~Host~ is an abstract notion of unit of computation that can be
+     bound to bare-metal machines, virtual machines or containers.
+
+     Executing the ~fig1.py~ provisions 2 machines on VirtualBox, and
+     executes the ~contextualize~ function.
      : pipenv run python fig1.py
-- Fig. 2          :: Analyze Galera Protocol. Requires ~tcpdump~ and
-     should be run as ~sudo~
+
+- Fig. 2          :: Defines an ~analyze_galera~ function that
+     analyzes the Galera protocol of a ~Network~.
+
+     A ~Network~ is an abstraction notion for a Network that can be
+     bound to a flat network, a virtual (extensible) LAN, ...
+
+     Executing the ~fig2.py~, first, provisions 2 machines and 1
+     private network on VirtualBox. Then, it installs and setups
+     Galera according to an [[file:ansible/deploy-galera.yml][Ansible file]]. Especially, that file
+     configures Galera to use the private network previously
+     provisioned. Finally, the Python script executes the
+     ~analyze_galera~ function. This function builds a specific ~pcap~
+     filter using the CIDR of the ~Network~ in argument. The analyze
+     requires ~tcpdump~ under the hood, and so requires to be run with
+     ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured properly]].
      : sudo pipenv run python fig2.py
-- Fig. 3          :: Install MariaDB and Galera on ~database~ Hosts,
-     and Sysbench on ~client~ Hosts.
+
+- Fig. 3          :: Defines a ~contextualize~ function that relies on
+     ~Roles~ to contextualize machine differently.
+
+     Executing the ~fig3.py~, first, provisions 2 /database/ machines,
+     and 2 /database/client/ machines. It then executes the
+     ~contextualize~ function that installs MariaDB and Galera on
+     the 4 /database/ machines, and Sysbench on the 2 /client/ machines.
      : pipenv run python fig3.py
-- Fig. 4 :: Reusable Monitoring function.
-- Fig. 5a :: Get resources on Vagrant
-- Fig. 5b :: Get resources on Grid'5000
+
+- Fig. 4          :: Reusable Monitoring function.
+     : pipenv run python fig4.py
+
+- Fig. 10         :: Parameter sweeper
+     : pipenv run python fig10.py
+
+# - Fig. 5a :: Get resources on Vagrant
+# - Fig. 5b :: Get resources on Grid'5000
