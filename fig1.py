@@ -16,7 +16,7 @@ def contextualize(hosts: List[Host]):
     '''Fig1. Install MariaDB and Galera on a list of `hosts`.
 
     A `Host` is an abstract notion of unit of computation that can be
-    binded to bare-metal machines, virtual machines or containers.
+    bound to bare-metal machines, virtual machines or containers.
 
     '''
     run_command("apt install -y mariadb-server galera", hosts)
@@ -24,14 +24,13 @@ def contextualize(hosts: List[Host]):
 
 # Test it!
 
-# Define the infrastructure: 2 machines, 1 net
+# Define the infrastructure: 2 machines
 CONF = (Configuration()
+        .from_settings(backend="virtualbox")
         .add_machine(flavour="tiny", number=2, roles=["database"])
-        .add_network(cidr="192.168.42.0/24", roles=["database"])
         .finalize())
 
 # Setup the infra and call the `contextualize` function
 with infra(CONF) as (hosts, _, _):
     LOG.info(inspect.getsource(contextualize))
     contextualize(hosts)
-    LOG.info("Finished!")

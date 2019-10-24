@@ -3,7 +3,7 @@ from functools import wraps
 import logging
 import os
 import shutil
-from typing import Tuple, List, Dict
+from typing import List
 
 from pyroute2 import NDB
 from pyroute2 import log as pyroute2log
@@ -13,17 +13,12 @@ from enoslib.api import (play_on, run_ansible, generate_inventory,
                          gather_facts, discover_networks)
 from enoslib.infra.enos_vagrant.provider import Enos_vagrant
 from enoslib.infra.enos_vagrant.configuration import Configuration
+from enoslib.types import Network, Role, Roles
 
 
 # General stuff
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger('IPDPS')
-
-
-# Type definitions
-Network = Dict[str, str]
-Role = str
-Roles = Dict[Role, List[Host]]
 
 
 # Utils functions
@@ -54,10 +49,17 @@ def infra(conf: Configuration):
         # Let the user does it stuff
         # yield: Tuple[List[Host], Roles, List[Network]]
         yield hosts, roles, networks
+
+        LOG.info('You can SSH on Hosts from another terminal with:')
+        for h in hosts:
+            LOG.info(f'- vagrant ssh {h.alias}')
+
+        input('Press Enter to finish...')
     except Exception as e:
         LOG.error(f'Unexpected error: {e}')
     finally:
         # Tear down the infra
+        LOG.info('Finished!')
         LOG.info('Destroying machines...')
         vagrant_provider.destroy()
 

@@ -6,8 +6,9 @@ import json
 
 from enoslib.api import play_on, discover_networks
 from enoslib.infra.enos_vagrant.configuration import Configuration
+from enoslib.types import Network, Roles
 
-from utils import infra, List, Roles, Network, LOG
+from utils import infra, List, LOG
 
 
 # Fig Code
@@ -31,12 +32,7 @@ def monitor(rs: Roles, nets: List[Network]):
             name="python-docker", update_cache=True)
 
     # Install Telegraf on monitored machines
-    with play_on(pattern_hosts="monitored", roles=rs, gather_facts=False) as ansible:
-        # TODO: Add the following in telegraf.conf
-        # See, https://gitlab.inria.fr/discovery/enoslib/issues/52
-        # urls = [{% for h in groups['aggregator'] %}
-        #         "http://{{ hostvars[h]['ansible_' + monitor]['ipv4']['address'] }}:8086"{% if not loop.last %},{% endif%}
-        #         {% endfor %}]
+    with play_on(pattern_hosts="monitored", roles=rs, gather_facts="all") as ansible:
         ansible.template(
             display_name="Generating Telegraf conf",
             src="ansible/telegraf.conf.j2",
@@ -89,11 +85,10 @@ def monitor(rs: Roles, nets: List[Network]):
 
     # Display UI URLs to view metrics
     ui_urls = map(lambda h: f'http://{h.extra["monitor_ip"]}:3000', rs['aggregator'])
-    LOG.info(f'View UI on one of {list(ui_urls)}')
+    LOG.info(f'View UI on {list(ui_urls)}')
     LOG.info('Connect with `admin` as login and password, '
              'then skip the change password, '
              'and finally select `Host Dashboard`.')
-    input('Press Enter to finish...')
 
 
 # Test it!
@@ -102,6 +97,7 @@ def monitor(rs: Roles, nets: List[Network]):
 # database/client/monitored machines, 1 aggregator machine, 1 net for
 # database, 1 net for monitoring.
 CONF = (Configuration()
+        .from_settings(backend="virtualbox")
         .add_machine(flavour='tiny', number=2, roles=['database', 'monitored'])
         .add_machine(flavour='tiny', number=2, roles=['database', 'client', 'monitored'])
         .add_machine(flavour='tiny', number=1, roles=['aggregator'])
@@ -113,4 +109,3 @@ CONF = (Configuration()
 with infra(CONF) as (_, roles, networks):
     LOG.info(inspect.getsource(monitor))
     monitor(roles, networks)
-    LOG.info('Finished!')
