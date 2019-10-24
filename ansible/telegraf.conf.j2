@@ -44,5 +44,7 @@
 
 [[outputs.influxdb]]
     # Send to `aggregator` machines on the `monitor` network
-    urls = ["http://192.168.43.241:8086"]
+    urls = [{% for h in groups['aggregator'] %}
+            "http://{{ hostvars[h]['ansible_' + monitor]['ipv4']['address'] }}:8086"{% if not loop.last %},{% endif%}
+            {% endfor %}]
     database = "telegraf"
