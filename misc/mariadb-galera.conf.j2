@@ -1,0 +1,30 @@
+# Galera Cluster: mandatory settings
+[mysqld]
+user = mysql
+bind-address = 0.0.0.0
+binlog_format = row
+innodb_autoinc_lock_mode = 2
+innodb_flush_log_at_trx_commit = 0
+query_cache_size = 0
+query_cache_type = 0
+
+
+
+wsrep_on                        = ON
+wsrep_provider                  = /usr/lib/libgalera_smm.so
+wsrep_sst_method                = rsync
+default_storage_engine          = InnoDB
+innodb_autoinc_lock_mode        = 2
+# innodb_locks_unsafe_for_binlog  = 1
+innodb_file_per_table
+innodb_thread_concurrency       = 0
+innodb_buffer_pool_size         = 50M
+innodb_log_buffer_size          = 64M
+# innodb_flush_method             = O_DIRECT
+innodb_log_file_size            = 50M
+
+# In the following we use the `database` network
+wsrep_cluster_address="gcomm://{% for h in groups['database'] %}{{ hostvars[h]['ansible_' + database]['ipv4']['address'] }}{% if not loop.last %},{% endif%}{% endfor %}"
+
+# https://mariadb.com/kb/en/library/galera-cluster-system-variables/#wsrep_sync_wait
+# wsrep_sync_wait=15

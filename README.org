@@ -1,4 +1,4 @@
-#+TITLE: EnosLib IPDPS Programs
+#+TITLE: EnosLib IPDPS Codes
 
 /[[https://gitlab.inria.fr/discovery/enoslib][EnosLib]] is a Python library that helps researchers in developing/
 /their experimental artifacts and executing these artifacts over/
@@ -8,8 +8,8 @@ This repository contains programs from the EnosLib paper for IPDPS 2019.
 
 * Initial Setup
 Programs in this repository assume Python 3.7 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipevn]] to
-install dependencies and execute code snippets. It also require
-[[https://www.vagrantup.com/][Vagrant]] with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
+install [[https://gitlab.inria.fr/discovery/enoslib][EnosLib]], its dependencies, and execute code snippets. It also
+require [[https://www.vagrantup.com/][Vagrant]] (>= 2.2.5) with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
 
 After installing the requirements do the following to test programs.
 #+begin_src bash
@@ -20,47 +20,116 @@ $ pipenv install
 #+end_src
 
 * Test Programs
-- Fig. 1          :: Defines a ~contextualize~ function that installs
-     MariaDB and Galera on a list of ~Host~​s.
+/Pay attention to LOGs while you execute programs to get insights
+about the program execution./
 
-     A ~Host~ is an abstract notion of unit of computation that can be
-     bound to bare-metal machines, virtual machines or containers.
+*** Fig. 1 [[file:fig1.py::15][(link)]]
+: pipenv run python fig1.py
 
-     Executing the ~fig1.py~ provisions 2 machines on VirtualBox, and
-     executes the ~contextualize~ function.
-     : pipenv run python fig1.py
+Fig. 1 defines a ~contextualize~ function that installs MariaDB and
+Galera on a list of =Hosts=.
 
-- Fig. 2          :: Defines an ~analyze_galera~ function that
-     analyzes the Galera protocol of a ~Network~.
+A ~Host~ is an abstract notion of unit of computation that can be
+bound to bare-metal machines, virtual machines or containers.
 
-     A ~Network~ is an abstraction notion for a Network that can be
-     bound to a flat network, a virtual (extensible) LAN, ...
+Executing the ~fig1.py~ provisions 2 machines on VirtualBox, and
+executes the ~contextualize~ function.
 
-     Executing the ~fig2.py~, first, provisions 2 machines and 1
-     private network on VirtualBox. Then, it installs and setups
-     Galera according to an [[file:ansible/deploy-galera.yml][Ansible file]]. Especially, that file
-     configures Galera to use the private network previously
-     provisioned. Finally, the Python script executes the
-     ~analyze_galera~ function. This function builds a specific ~pcap~
-     filter using the CIDR of the ~Network~ in argument. The analyze
-     requires ~tcpdump~ under the hood, and so requires to be run with
-     ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured properly]].
-     : sudo pipenv run python fig2.py
+/Infra requirements: 2 CPUs, 1Go RAM/
 
-- Fig. 3          :: Defines a ~contextualize~ function that relies on
-     ~Roles~ to contextualize machine differently.
+*** Fig. 2 [[file:fig2.py::15][(link)]]
+: pipenv run sudo python fig2.py
 
-     Executing the ~fig3.py~, first, provisions 2 /database/ machines,
-     and 2 /database/client/ machines. It then executes the
-     ~contextualize~ function that installs MariaDB and Galera on
-     the 4 /database/ machines, and Sysbench on the 2 /client/ machines.
-     : pipenv run python fig3.py
+Fig. 2 defines an ~analyze_galera~ function that analyzes the Galera
+protocol of a ~Network~.
 
-- Fig. 4          :: Reusable Monitoring function.
-     : pipenv run python fig4.py
+A ~Network~ is an abstraction for a network that can be bound to a
+flat network, a virtual (extensible) LAN, ...
 
-- Fig. 10         :: Parameter sweeper
-     : pipenv run python fig10.py
+Executing the ~fig2.py~, first, provisions 2 machines and 1 private
+network on VirtualBox. Then, it installs and setups Galera with an
+[[file:misc/deploy-galera.yml][Ansible file]]. Especially, that file configures Galera to use the
+private network previously provisioned. Finally, the Python script
+executes the ~analyze_galera~ function. This function builds a
+specific ~pcap~ filter using the CIDR of the ~Network~ in argument.
+The analyze requires ~tcpdump~ under the hood, and so needs to be run
+with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured properly]].
 
-# - Fig. 5a :: Get resources on Vagrant
-# - Fig. 5b :: Get resources on Grid'5000
+/Vagrant implements private Network in VirtualBox with the/
+/*host-only* [[https://www.virtualbox.org/manual/ch06.html#network_hostonly][adapter]]. In such mode, the traffic between VMs never/
+/leaves VBox. Hence, sniffing from the Host machine is impossible./
+/To bypass this limitation, this example use the [[https://github.com/vagrant-libvirt/vagrant-libvirt][Libvirt]] backend./
+/Someone could also do 'sudo vagrant ssh enos-0-1' and execute the/
+/tcpdump there/
+: tcpdump -i eth1 'tcp and port 4567'
+
+/Infra requirements: 2 CPUs, 1Go RAM/
+
+*** Fig. 3 [[file:fig3.py::14][(link)]]
+: pipenv run python fig3.py
+
+Fig. 3 defines a ~contextualize~ function that relies on ~Roles~ to
+contextualize machine differently.
+
+A ~Role~ is a label that identifies ~Hosts~ and ~Networks~ that share
+the same behavior. Thanks to roles, an experimenter can define codes
+that will only be executed on specific resources.
+
+Executing the ~fig3.py~ provisions 2 /database/ machines, and 2
+/database/client/ machines. It then executes the ~contextualize~
+function that installs MariaDB and Galera on the 4 /database/
+machines, and Sysbench on the 2 /client/ machines.
+
+/Infra requirements: 4 CPUs, 2Go RAM/
+
+*** Fig. 4 [[file:fig4.py::15][(link)]]
+: pipenv run python fig4.py
+
+Fig. 4 exploit Ansible's modules to efficiently define a reusable
+monitoring function.
+
+So far, programs use the EnosLib [[https://discovery.gitlabpages.inria.fr/enoslib/apidoc/api.html#enoslib.api.run_command][run_command]] function to contextualize
+resources. An easy to use function that performs shell commands on
+machines, but lacks of expressivity when it is time to develop complex
+artifact. This code example use modules which are reusable scripts
+from Ansible's modules to define a generic function called ~monitor~.
+
+The ~monitor~ function install a TIG stack:
+1. Collects metrics on /monitored/ machine with Telegraf.
+2. Stores and shows metrics on /aggregator/ machines with InfluxDB and
+   Grafana.
+3. Uses the /monitor/ network to transport metrics from /monitored/ to
+   /aggregator/.
+
+Executing the ~fig4.py~ provisions 2 /database/monitored/ machines, 2
+/database/client/monitored/ machines, 1 /aggregator/ machine, 1
+/database/ network and 1 /aggregator/ network. It then executes the
+~monitor~ function that installs a TIG stack. The LOG output an URL to
+see collected metrics in Grafana.
+
+This example also shows that ~Roles~ break apart the code into units
+that are responsible for one behavior. This make these units easy to
+share and reuse. In this regard, the ~monitor~ function is an excerpt
+of the [[https://gitlab.inria.fr/discovery/enoslib/tree/v4.8.4/enoslib/service/monitoring][monitoring]] service from EnosLib.
+
+/Infra requirements: 5 CPUs, 2.5Go RAM/
+
+*** Fig. 5 [[file:fig5.py::14][(link)]]
+: pipenv run python fig5.py
+
+Fig. 5 uses the declarative resources description of [[file:fig5.yaml][fig5.yaml]] to
+start the infrastructure. The description tells to provision 2
+/database/ machine, 2 /database/client/ machine, 1 /database/ network
+and 1 /monitor/ network.
+
+/Infra requirements: 4 CPUs, 2Go RAM/
+
+*** Fig. 10 [[file:fig10.py::14][(link)]]
+: pipenv run python fig10.py
+
+Fig. 10 is an example of an artifact with plenty of parameters to
+tests. It divides the artifact workflow in 4 phases: ~deploy~,
+~bench~, ~backup~, and ~destroy~, to iterate over the set of
+parameters. It relies on the existence of a /sweeper/ that persists
+the information whether the current iteration is successful (~done~)
+or needs to be retried (~skip~).

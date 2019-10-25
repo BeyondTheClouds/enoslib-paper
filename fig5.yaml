@@ -1,0 +1,17 @@
+---
+backend: virtualbox
+
+resources:
+  machines:
+    - flavour: tiny
+      number: 2
+      roles: [database]
+    - flavour: tiny
+      number: 2
+      roles: [database, client]
+
+  networks:
+    - cidr: 192.168.46.0/24
+      roles: [database]
+    - cidr: 192.168.47.0/24
+      roles: [monitor]

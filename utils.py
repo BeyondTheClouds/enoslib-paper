@@ -24,7 +24,7 @@ LOG = logging.getLogger('IPDPS')
 # Utils functions
 def setup_galera(rs: Roles, nets: List[Network]):
     '''Installs and configures Galera'''
-    galera_ansible_path = 'ansible/deploy-galera.yml'
+    galera_ansible_path = 'misc/deploy-galera.yml'
 
     discover_networks(rs, nets)
     run_ansible([galera_ansible_path], roles=rs)
@@ -44,6 +44,7 @@ def infra(conf: Configuration):
     # Extract the list of Hosts from Roles
     hosts = set([h for hs in roles.values()
                    for h  in hs])
+    LOG.info("Provisioning finished")
 
     try:
         # Let the user does it stuff

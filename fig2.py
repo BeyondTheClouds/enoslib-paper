@@ -31,7 +31,7 @@ def analyze_galera(net: Network):
 
 # Define the infrastructure: 2 machines, 1 net
 CONF = (Configuration()
-        .from_settings(backend="virtualbox")
+        .from_settings(backend="libvirt")
         .add_machine(flavour="tiny", number=2, roles=["database"])
         .add_network(cidr="192.168.42.0/24", roles=["database"])
         .finalize())

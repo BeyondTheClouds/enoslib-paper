@@ -35,7 +35,7 @@ def monitor(rs: Roles, nets: List[Network]):
     with play_on(pattern_hosts="monitored", roles=rs, gather_facts="all") as ansible:
         ansible.template(
             display_name="Generating Telegraf conf",
-            src="ansible/telegraf.conf.j2",
+            src="misc/telegraf.conf.j2",
             dest="/root/telegraf.conf")
         ansible.docker_container(
             display_name="Installing Telegraf",
@@ -81,7 +81,7 @@ def monitor(rs: Roles, nets: List[Network]):
             user="admin", password="admin", force_basic_auth=True,
             body_format="json", method="POST",
             status_code=[200], # 409 for already added
-            src="ansible/grafana-dashboard.json")
+            src="misc/grafana-dashboard.json")
 
     # Display UI URLs to view metrics
     ui_urls = map(lambda h: f'http://{h.extra["monitor_ip"]}:3000', rs['aggregator'])
@@ -101,8 +101,8 @@ CONF = (Configuration()
         .add_machine(flavour='tiny', number=2, roles=['database', 'monitored'])
         .add_machine(flavour='tiny', number=2, roles=['database', 'client', 'monitored'])
         .add_machine(flavour='tiny', number=1, roles=['aggregator'])
-        .add_network(cidr='192.168.42.0/24', roles=['database'])
-        .add_network(cidr='192.168.43.0/24', roles=['monitor'])
+        .add_network(cidr='192.168.43.0/24', roles=['database'])
+        .add_network(cidr='192.168.44.0/24', roles=['monitor'])
         .finalize())
 
 # Setup the infra and call the `monitor` function

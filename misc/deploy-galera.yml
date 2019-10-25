@@ -14,6 +14,7 @@
       name: "{{ item }}"
       update_cache: yes
     loop:
+      - tcpdump
       - python-docker
 
   - name: Mount /database-galera in tmpfs to store MariaDB
@@ -39,8 +40,8 @@
 
   - name: Start the MariaDB-Galera first container
     docker_container:
-      name: "mariadb-{{ inventory_hostname_short }}"
-      image: "mariadb:10"
+      name: "mariadb"
+      image: "mariadb:10.1"
       detach: True
       exposed_ports:
         - 4567
@@ -80,8 +81,8 @@
 
   - name: Start MariaDB-Galera other containers
     docker_container:
-      name: "mariadb-{{ inventory_hostname_short }}"
-      image: "mariadb:10"
+      name: "mariadb"
+      image: "mariadb:10.1"
       detach: True
       exposed_ports:
         - 4567
