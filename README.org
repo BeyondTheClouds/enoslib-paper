@@ -7,11 +7,11 @@
 This repository contains programs from the EnosLib paper for IPDPS 2019.
 
 * Initial Setup
-Programs in this repository assume Python 3.7 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipevn]] to
+Programs in this repository assume Python 3.7 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipenv]] to
 install [[https://gitlab.inria.fr/discovery/enoslib][EnosLib]] with its dependencies, and execute code snippets. It also
 requires [[https://www.vagrantup.com/][Vagrant]] (>= 2.2.5) with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
 
-After installing pipenv and Vagrant, do the following to setup the environment.
+After installing pipenv and Vagrant, do the following to setup the environment:
 #+begin_src bash
 $ git clone --depth 1 https://github.com/BeyondTheClouds/enoslib-ipdps.git
 $ cd enoslib-ipdps/
@@ -69,7 +69,7 @@ with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345
 : pipenv run python fig3.py
 
 Fig. 3 defines a ~contextualize~ function that relies on ~Roles~ to
-contextualize machine differently.
+contextualize machines differently.
 
 A ~Role~ is a label that identifies ~Hosts~ and ~Networks~ that share
 the same behavior. Thanks to roles, an experimenter can define codes
@@ -85,17 +85,17 @@ machines, and Sysbench on the 2 /client/ machines.
 *** Fig. 4 [[file:fig4.py::15][(link)]]
 : pipenv run python fig4.py
 
-Fig. 4 exploit Ansible's modules to efficiently define a reusable
+Fig. 4 exploits Ansible's modules to efficiently define a reusable
 monitoring function.
 
 So far, programs use the EnosLib [[https://discovery.gitlabpages.inria.fr/enoslib/apidoc/api.html#enoslib.api.run_command][run_command]] function to contextualize
-resources. An easy to use function that performs shell commands on
-machines, but lacks of expressivity when it is time to develop complex
-artifact. This code example use /modules/ which are reusable scripts
+resources. This is an easy to use function that performs shell commands on
+machines, but lacks expressivity when it is time to develop complex
+artifacts. This code example uses /modules/ which are reusable scripts
 from Ansible's modules to define a generic function called ~monitor~.
 
-The ~monitor~ function install a TIG stack:
-1. Collects metrics on /monitored/ machine with Telegraf.
+The ~monitor~ function installs a TIG stack that:
+1. Collects metrics on /monitored/ machines with Telegraf.
 2. Stores and shows metrics on /aggregator/ machines with InfluxDB and
    Grafana.
 3. Uses the /monitor/ network to transport metrics from /monitored/ to
@@ -128,7 +128,7 @@ and 1 /monitor/ network.
 : pipenv run python fig10.py
 
 Fig. 10 is an example of an artifact with plenty of parameters to
-tests. It divides the artifact workflow in 4 phases: ~deploy~,
+test. It divides the artifact workflow in 4 phases: ~deploy~,
 ~bench~, ~backup~, and ~destroy~, to iterate over the set of
 parameters. It relies on the existence of a /sweeper/ that persists
 the information whether the current iteration is successful (~done~)
