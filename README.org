@@ -8,10 +8,10 @@ This repository contains programs from the EnosLib paper for IPDPS 2019.
 
 * Initial Setup
 Programs in this repository assume Python 3.7 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipevn]] to
-install [[https://gitlab.inria.fr/discovery/enoslib][EnosLib]], its dependencies, and execute code snippets. It also
-require [[https://www.vagrantup.com/][Vagrant]] (>= 2.2.5) with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
+install [[https://gitlab.inria.fr/discovery/enoslib][EnosLib]] with its dependencies, and execute code snippets. It also
+requires [[https://www.vagrantup.com/][Vagrant]] (>= 2.2.5) with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
 
-After installing the requirements do the following to test programs.
+After installing pipenv and Vagrant, do the following to setup the environment.
 #+begin_src bash
 $ git clone --depth 1 https://github.com/BeyondTheClouds/enoslib-ipdps.git
 $ cd enoslib-ipdps/
@@ -60,7 +60,7 @@ with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345
 /leaves VBox. Hence, sniffing from the Host machine is impossible./
 /To bypass this limitation, this example use the [[https://github.com/vagrant-libvirt/vagrant-libvirt][Libvirt]] backend./
 /Someone could also do 'sudo vagrant ssh enos-0-1' and execute the/
-/tcpdump there/
+/following tcpdump there/
 : tcpdump -i eth1 'tcp and port 4567'
 
 /Infra requirements: 2 CPUs, 1Go RAM/
@@ -91,7 +91,7 @@ monitoring function.
 So far, programs use the EnosLib [[https://discovery.gitlabpages.inria.fr/enoslib/apidoc/api.html#enoslib.api.run_command][run_command]] function to contextualize
 resources. An easy to use function that performs shell commands on
 machines, but lacks of expressivity when it is time to develop complex
-artifact. This code example use modules which are reusable scripts
+artifact. This code example use /modules/ which are reusable scripts
 from Ansible's modules to define a generic function called ~monitor~.
 
 The ~monitor~ function install a TIG stack:
