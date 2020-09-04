@@ -1,21 +1,21 @@
-#+TITLE: EnosLib IPDPS Codes
+#+TITLE: EnosLib TPDS Codes
 
 /[[https://gitlab.inria.fr/discovery/enoslib][EnosLib]] is a Python library that helps researchers in developing/
 /their experimental artifacts and executing these artifacts over/
 /different infrastructures./
 
-This repository contains programs from the EnosLib paper for IPDPS 2019.
+This repository contains programs from the EnosLib paper for TPDS 2020.
 
 * Initial Setup
-Programs in this repository assume Python 3.7 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipenv]] to
+Programs in this repository assume Python 3.8 and rely on [[https://pipenv.readthedocs.io/en/latest/][pipenv]] to
 install [[https://gitlab.inria.fr/discovery/enoslib][EnosLib]] with its dependencies, and execute code snippets. It also
 requires [[https://www.vagrantup.com/][Vagrant]] (>= 2.2.5) with [[https://www.virtualbox.org/][VirtualBox]] to setup an infrastructure.
 
-After installing pipenv and Vagrant, do the following to setup the environment:
+After installing pipenv and Vagrant, do the following to setup the
+environment:
 #+begin_src bash
-$ git clone --depth 1 https://github.com/BeyondTheClouds/enoslib-ipdps.git
-$ cd enoslib-ipdps/
-$ pipenv --python 3.7
+$ git clone --single-branch --branch tpds-2020 --depth 1 https://github.com/BeyondTheClouds/enoslib-paper.git
+$ cd enoslib-paper/
 $ pipenv install
 #+end_src
 
@@ -23,37 +23,49 @@ $ pipenv install
 /Pay attention to LOGs while you execute programs to get insights
 about the program execution./
 
-*** Fig. 1 [[file:fig1.py::15][(link)]]
-: pipenv run python fig1.py
+*** Fig. 3 [[file:fig3.py::14][(link)]]
+: pipenv run python fig3.py
 
-Fig. 1 defines a ~contextualize~ function that installs MariaDB and
+Fig. 3 uses the declarative resources description of
+[[file:5rdbms2sys-vagrant.yaml]] to start the infrastructure. The
+description tells to provision 3 /database/ machines, 2
+/database/client/ machines, 1 /database/ network and 1 /monitor/
+network.
+
+/Infra requirements: 3 CPUs, 2.5Go RAM/
+
+*** Fig. 4 [[file:fig4.py::15][(link)]]
+: pipenv run python fig4.py
+
+Fig. 4 defines an ~install_galera~ function that installs MariaDB and
 Galera on a list of =Hosts=.
 
 A ~Host~ is an abstract notion of unit of computation that can be
 bound to bare-metal machines, virtual machines or containers.
 
-Executing the ~fig1.py~ provisions 2 machines on VirtualBox, and
-executes the ~contextualize~ function.
+Executing the ~fig4.py~ provisions 2 machines on VirtualBox, and
+executes the ~install_galera~ function.
 
 /Infra requirements: 2 CPUs, 1Go RAM/
 
-*** Fig. 2 [[file:fig2.py::15][(link)]]
-: pipenv run sudo python fig2.py
+*** Fig. 5 [[file:fig5.py::15][(link)]]
+: pipenv run sudo python fig5.py
 
-Fig. 2 defines an ~analyze_galera~ function that analyzes the Galera
+Fig. 5 defines an ~analyze_galera~ function that analyzes the Galera
 protocol of a ~Network~.
 
 A ~Network~ is an abstraction for a network that can be bound to a
 flat network, a virtual (extensible) LAN, ...
 
-Executing the ~fig2.py~, first, provisions 2 machines and 1 private
+Executing the ~fig5.py~, first, provisions 2 machines and 1 private
 network on VirtualBox. Then, it installs and setups Galera with an
 [[file:misc/deploy-galera.yml][Ansible file]]. Especially, that file configures Galera to use the
 private network previously provisioned. Finally, the Python script
 executes the ~analyze_galera~ function. This function builds a
 specific ~pcap~ filter using the CIDR of the ~Network~ in argument.
-The analyze requires ~tcpdump~ under the hood, and so needs to be run
-with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured properly]].
+The analyze requires ~libpcap~ and ~tcpdump~ under the hood, and so
+needs to be run with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured
+properly]].
 
 /Vagrant implements private Network in VirtualBox with the/
 /*host-only* [[https://www.virtualbox.org/manual/ch06.html#network_hostonly][adapter]]. In such mode, the traffic between VMs never/
@@ -65,27 +77,27 @@ with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345
 
 /Infra requirements: 2 CPUs, 1Go RAM/
 
-*** Fig. 3 [[file:fig3.py::14][(link)]]
-: pipenv run python fig3.py
+*** Fig. 6 [[file:fig6.py::14][(link)]]
+: pipenv run python fig6.py
 
-Fig. 3 defines a ~contextualize~ function that relies on ~Roles~ to
+Fig. 6 defines a ~setup_galera~ function that relies on ~Roles~ to
 contextualize machines differently.
 
 A ~Role~ is a label that identifies ~Hosts~ and ~Networks~ that share
 the same behavior. Thanks to roles, an experimenter can define codes
 that will only be executed on specific resources.
 
-Executing the ~fig3.py~ provisions 2 /database/ machines, and 2
-/database/client/ machines. It then executes the ~contextualize~
+Executing the ~fig6.py~ provisions 2 /database/ machines, and 2
+/database/client/ machines. It then executes the ~setup_galera~
 function that installs MariaDB and Galera on the 4 /database/
 machines, and Sysbench on the 2 /client/ machines.
 
 /Infra requirements: 4 CPUs, 2Go RAM/
 
-*** Fig. 4 [[file:fig4.py::15][(link)]]
-: pipenv run python fig4.py
+*** Fig. 7 [[file:fig7.py::15][(link)]]
+: pipenv run python fig7.py
 
-Fig. 4 exploits Ansible's modules to efficiently define a reusable
+Fig. 7 exploits Ansible's modules to efficiently define a reusable
 monitoring function.
 
 So far, programs use the EnosLib [[https://discovery.gitlabpages.inria.fr/enoslib/apidoc/api.html#enoslib.api.run_command][run_command]] function to contextualize
@@ -101,7 +113,7 @@ The ~monitor~ function installs a TIG stack that:
 3. Uses the /monitor/ network to transport metrics from /monitored/ to
    /aggregator/.
 
-Executing the ~fig4.py~ provisions 2 /database/monitored/ machines, 2
+Executing the ~fig7.py~ provisions 2 /database/monitored/ machines, 2
 /database/client/monitored/ machines, 1 /aggregator/ machine, 1
 /database/ network and 1 /aggregator/ network. It then executes the
 ~monitor~ function that installs a TIG stack. The LOG output an URL to
@@ -113,16 +125,6 @@ share and reuse. In this regard, the ~monitor~ function is an excerpt
 of the [[https://gitlab.inria.fr/discovery/enoslib/tree/v4.8.4/enoslib/service/monitoring][monitoring]] service from EnosLib.
 
 /Infra requirements: 5 CPUs, 2.5Go RAM/
-
-*** Fig. 5 [[file:fig5.py::14][(link)]]
-: pipenv run python fig5.py
-
-Fig. 5 uses the declarative resources description of [[file:fig5.yaml][fig5.yaml]] to
-start the infrastructure. The description tells to provision 2
-/database/ machine, 2 /database/client/ machine, 1 /database/ network
-and 1 /monitor/ network.
-
-/Infra requirements: 4 CPUs, 2Go RAM/
 
 *** Fig. 10 [[file:fig10.py::14][(link)]]
 : pipenv run python fig10.py

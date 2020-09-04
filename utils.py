@@ -10,7 +10,8 @@ from pyroute2 import log as pyroute2log
 
 from enoslib.host import Host
 from enoslib.api import (play_on, run_ansible, generate_inventory,
-                         gather_facts, discover_networks)
+                         gather_facts, get_hosts, discover_networks,
+                         ensure_python3)
 from enoslib.infra.enos_vagrant.provider import Enos_vagrant
 from enoslib.infra.enos_vagrant.configuration import Configuration
 from enoslib.types import Network, Role, Roles
@@ -18,7 +19,7 @@ from enoslib.types import Network, Role, Roles
 
 # General stuff
 logging.basicConfig(level=logging.INFO)
-LOG = logging.getLogger('IPDPS')
+LOG = logging.getLogger('TPDS')
 
 
 # Utils functions
@@ -26,8 +27,15 @@ def setup_galera(rs: Roles, nets: List[Network]):
     '''Installs and configures Galera'''
     galera_ansible_path = 'misc/deploy-galera.yml'
 
-    discover_networks(rs, nets)
+    rs = discover_networks(rs, nets)  # discover_networks is immutable since 4.9.0
+    ensure_python3(make_default=True, roles=rs)
     run_ansible([galera_ansible_path], roles=rs)
+
+
+@contextmanager
+def ansible_on(hosts: Roles, role: str):
+    with play_on(roles=hosts, pattern_hosts=role, gather_facts="all") as playbook:
+        yield playbook
 
 
 @contextmanager
@@ -41,19 +49,16 @@ def infra(conf: Configuration):
     LOG.info("Provisioning machines...")
     roles, networks = vagrant_provider.init()
 
-    # Extract the list of Hosts from Roles
-    hosts = set([h for hs in roles.values()
-                   for h  in hs])
     LOG.info("Provisioning finished")
 
     try:
         # Let the user does it stuff
-        # yield: Tuple[List[Host], Roles, List[Network]]
-        yield hosts, roles, networks
+        # yield: Tuple[Roles, List[Network]]
+        yield roles, networks
 
         LOG.info('You can SSH on Hosts from another terminal with:')
-        for h in hosts:
-            LOG.info(f'- vagrant ssh {h.alias}')
+        for host in get_hosts(roles=roles, pattern_hosts='all'):
+            LOG.info(f'- vagrant ssh {host.alias}')
 
         input('Press Enter to finish...')
     except Exception as e:

@@ -4,12 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
 
 [packages]
-enoslib = "==4.8.4"
-scapy = {extras = ["basic"], version = "==2.4.3"}
+enoslib = "==5.3.2"
+scapy = {extras = ["basic"], version = "==2.4.4"}
 pyroute2 = "==0.5.7"
+six = "==1.15.0"
 
 [scripts]
 # setup-aio  = "python ./setup-aio.py"

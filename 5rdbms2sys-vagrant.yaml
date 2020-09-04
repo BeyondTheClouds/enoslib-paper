@@ -4,14 +4,14 @@ backend: virtualbox
 resources:
   machines:
     - flavour: tiny
-      number: 2
-      roles: [database]
+      number: 3
+      roles: [RDBMS]
     - flavour: tiny
       number: 2
-      roles: [database, client]
+      roles: [RDBMS, client]
 
   networks:
     - cidr: 192.168.46.0/24
-      roles: [database]
+      roles: [RDBMS]
     - cidr: 192.168.47.0/24
       roles: [monitor]

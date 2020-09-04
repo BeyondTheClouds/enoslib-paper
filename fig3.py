@@ -1,37 +1,29 @@
 # -*- coding: utf-8 -*-
 
 # Imports
-import inspect
+import os
+from pprint import pformat
+import yaml
 
-from enoslib.api import run_command
 from enoslib.infra.enos_vagrant.configuration import Configuration
-from enoslib.types import Roles
 
 from utils import infra, LOG
 
 
-# Fig Code
-def contextualize(rs: Roles):
-    'Fig3. Install Galera on `database`, and Sysbench on `client` hosts.'
-    run_command("apt install -y mariadb-server galera",
-                pattern_hosts="database",
-                roles=rs)
-    run_command("curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh | bash; apt install -y sysbench",
-                pattern_hosts="client",
-                roles=rs)
+# Fig Code (Load the yaml file)
+YAML_PATH = '5rdbms2sys-vagrant.yaml'
+YAML_DICT = None
+with open(YAML_PATH) as yaml_file:
+    YAML_DICT = yaml.safe_load(yaml_file)
 
 
 # Test It!
 
 # Define the infrastructure: 2 database machines, 2
 # database/client machines, 1 net
-CONF = (Configuration()
-        .from_settings(backend="virtualbox")
-        .add_machine(flavour="tiny", number=2, roles=["database"])
-        .add_machine(flavour="tiny", number=2, roles=["database", "client"])
-        .finalize())
+CONF = Configuration.from_dictionnary(YAML_DICT)
 
 # Setup the infra and call the `contextualize` function
-with infra(CONF) as (_, roles, _):
-    LOG.info(inspect.getsource(contextualize))
-    contextualize(roles)
+LOG.info(f'Provisionning of {YAML_PATH}:\n{pformat(CONF.to_dict())}')
+with infra(CONF):
+    pass

@@ -1,29 +1,47 @@
 # -*- coding: utf-8 -*-
+
 
 # Imports
-import os
-from pprint import pformat
-import yaml
+import inspect
+import scapy.all as scapy
 
 from enoslib.infra.enos_vagrant.configuration import Configuration
+from enoslib.types import Network
 
-from utils import infra, LOG
-
-
-# Fig Code (Load the yaml file)
-YAML_PATH = 'fig5.yaml'
-YAML_DICT = None
-with open(YAML_PATH) as yaml_file:
-    YAML_DICT = yaml.safe_load(yaml_file)
+from utils import (setup_galera, infra, lookup_net, ifname, Network,
+                   LOG)
 
 
-# Test It!
+# Fig Code
+def analyze_galera(net: Network):
+    '''Fig5. Analyze of the Galera protocol on the `net` Network.
 
-# Define the infrastructure: 2 database machines, 2
-# database/client machines, 1 net
-CONF = Configuration.from_dictionnary(YAML_DICT)
+    This function builds a specific `filter` with the CIDR of the
+    `net` and prints TCP `packets` that are related to the Galera
+    communications.
 
-# Setup the infra and call the `contextualize` function
-LOG.info(f'Provisionning of {YAML_PATH}:\n{pformat(CONF.to_dict())}')
-with infra(CONF):
-    pass
+    '''
+    LOG.info(f'Listen packet on {ifname(net)}...')
+    scapy.sniff(
+        iface=ifname(net), count=10,  # Stop analysis after 10 packets
+        filter=f'net {net["cidr"]} and tcp and port 4567',
+        prn=lambda packet: packet.summary())
+
+
+# Test it!
+
+# Define the infrastructure: 2 machines, 1 net
+CONF = (Configuration()
+        .from_settings(backend="libvirt")
+        .add_machine(flavour="tiny", number=2, roles=["RDBMS"])
+        .add_network(cidr="192.168.42.0/24", roles=["RDBMS"])
+        .finalize())
+
+# Setup the infra and call the `analyze_galera` function
+with infra(CONF) as (hosts, networks):
+    # First, install and configure active/active Galera
+    setup_galera(hosts, networks)
+
+    # Then, analyze
+    LOG.info(inspect.getsource(analyze_galera))
+    analyze_galera(lookup_net(networks, "RDBMS"))
