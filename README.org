@@ -27,7 +27,7 @@ about the program execution./
 : pipenv run python fig3.py
 
 Fig. 3 uses the declarative resources description of
-[[file:5rdbms2sys-vagrant.yaml]] to start the infrastructure. The
+[[file:5rdbms2sys-vagrant.yaml]] to start the infrastructure.  The
 description tells to provision 3 /database/ machines, 2
 /database/client/ machines, 1 /database/ network and 1 /monitor/
 network.
@@ -38,7 +38,7 @@ network.
 : pipenv run python fig4.py
 
 Fig. 4 defines an ~install_galera~ function that installs MariaDB and
-Galera on a list of =Hosts=.
+Galera on a list of ~Hosts~.
 
 A ~Host~ is an abstract notion of unit of computation that can be
 bound to bare-metal machines, virtual machines or containers.
@@ -125,6 +125,23 @@ share and reuse. In this regard, the ~monitor~ function is an excerpt
 of the [[https://gitlab.inria.fr/discovery/enoslib/tree/v4.8.4/enoslib/service/monitoring][monitoring]] service from EnosLib.
 
 /Infra requirements: 5 CPUs, 2.5Go RAM/
+
+*** Fig. 2 [[file:fig2.py::24][(link)]]
+: pipenv run python fig2.py
+
+Fig. 2 defines an ~experiment~ function that:
+1. acquires resources on testbed
+2. installs the distributed RDBMS and third party softwares, and sets
+   latency between RDBMS nodes
+3. benchmarks the distributed RDBMS
+4. collects/backups all logs
+
+Executing the ~fig4.py~ calls the ~experiment~ function with the
+VirtualBox provider and a code to install Galera.  It provisions 4
+machines for the distributed RDBMS and 2 private networks: one for
+RDBMS communication, and one for monitoring.
+
+/Infra requirements: 4 CPUs, 2Go RAM/
 
 *** Fig. 10 [[file:fig10.py::14][(link)]]
 : pipenv run python fig10.py

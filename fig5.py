@@ -4,12 +4,15 @@
 # Imports
 import inspect
 import scapy.all as scapy
+from scapy.config import conf as scapy_config
 
 from enoslib.infra.enos_vagrant.configuration import Configuration
 from enoslib.types import Network
 
 from utils import (setup_galera, infra, lookup_net, ifname, Network,
                    LOG)
+
+scapy_config.use_pcap = True
 
 
 # Fig Code

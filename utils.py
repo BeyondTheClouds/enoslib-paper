@@ -23,13 +23,22 @@ LOG = logging.getLogger('TPDS')
 
 
 # Utils functions
-def setup_galera(rs: Roles, nets: List[Network]):
-    '''Installs and configures Galera'''
+def setup_galera(hosts: Roles, nets: List[Network],
+                 rdbms_role = 'RDBMS',
+                 sysbench_role = 'client'):
+    '''Installs and configures Galera.
+
+    This function uses an ansible playbook at `misc/deploy-galera.yml`
+    to deploy and configure Galera.
+    '''
     galera_ansible_path = 'misc/deploy-galera.yml'
 
-    rs = discover_networks(rs, nets)  # discover_networks is immutable since 4.9.0
-    ensure_python3(make_default=True, roles=rs)
-    run_ansible([galera_ansible_path], roles=rs)
+    hosts = discover_networks(hosts, nets)  # discover_networks is immutable since 4.9.0
+    ensure_python3(make_default=True, roles=hosts)
+    run_ansible([galera_ansible_path], roles=hosts, extra_vars={
+        'RDBMS_role': rdbms_role,
+        'SYSBENCH_role': sysbench_role
+    })
 
 
 @contextmanager

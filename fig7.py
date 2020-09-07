@@ -87,10 +87,10 @@ def monitor(hosts, nets, monitored_role, aggregator_role):
 
     # Display UI URLs to view metrics
     ui_urls = map(lambda h: f'http://{h.extra["monitor_ip"]}:3000', hosts[aggregator_role])
-    LOG.info(f'View UI on {list(ui_urls)}')
-    LOG.info('Connect with `admin` as login and password, '
-             'then skip the change password, '
-             'and finally select `Host Dashboard`.')
+    LOG.info(f'View UI at {list(ui_urls)}')
+    LOG.info('Connect with `admin` as login and password. '
+             'Skip the change password. '
+             'Select `Host Dashboard`.')
 
 
 # Test it!

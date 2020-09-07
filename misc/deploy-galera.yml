@@ -1,7 +1,7 @@
 ---
-- hosts: RDBMS
+- hosts: "{{ RDBMS_role }}"
   vars:
-    dbmaster_node: "{{ groups['RDBMS'][0] }}"
+    dbmaster_node: "{{ groups[RDBMS_role][0] }}"
 #---------------------------------------------------------------------
   tasks:
   - name: Install docker
