@@ -4,7 +4,6 @@
 import inspect
 from typing import List
 
-from enoslib.host import Host
 from enoslib.api import run as run_command
 from enoslib.infra.enos_vagrant.configuration import Configuration
 
@@ -19,7 +18,7 @@ def install_galera(hosts):
     bound to bare-metal machines, virtual machines or containers.
 
     '''
-    run_command("apt install -y mariadb-server galera", hosts)
+    run_command('apt update; apt install -y mariadb-server galera', hosts)
 
 
 # Test it!

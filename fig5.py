@@ -7,10 +7,9 @@ import scapy.all as scapy
 from scapy.config import conf as scapy_config
 
 from enoslib.infra.enos_vagrant.configuration import Configuration
-from enoslib.types import Network
+from enoslib.objects import Network
 
-from utils import (setup_galera, infra, lookup_net, ifname, Network,
-                   LOG)
+from utils import (setup_galera, infra, ifname, LOG)
 
 scapy_config.use_pcap = True
 
@@ -27,7 +26,7 @@ def analyze_galera(net: Network):
     LOG.info(f'Listen packet on {ifname(net)}...')
     scapy.sniff(
         iface=ifname(net), count=10,  # Stop analysis after 10 packets
-        filter=f'net {net["cidr"]} and tcp and port 4567',
+        filter=f'net {net.network} and tcp and port 4567',
         prn=lambda packet: packet.summary())
 
 
@@ -47,4 +46,4 @@ with infra(CONF) as (hosts, networks):
 
     # Then, analyze
     LOG.info(inspect.getsource(analyze_galera))
-    analyze_galera(lookup_net(networks, "RDBMS"))
+    analyze_galera(networks["RDBMS"][0])

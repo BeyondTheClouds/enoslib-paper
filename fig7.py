@@ -4,11 +4,10 @@
 import inspect
 import json
 
-from enoslib.api import discover_networks, ensure_python3
+from enoslib.api import ensure_python3
 from enoslib.infra.enos_vagrant.configuration import Configuration
-from enoslib.types import Network, Roles
 
-from utils import infra, LOG, ansible_on
+from utils import infra, LOG, ansible_on, populate_ipv4
 
 
 # Fig Code
@@ -21,7 +20,7 @@ def monitor(hosts, nets, monitored_role, aggregator_role):
     '''
     # Discover networks to use net info in telegraf.conf.j2
     # plus ensure python3 is installed on machines
-    hosts = discover_networks(hosts, nets)
+    hosts = populate_ipv4(hosts, nets, "monitor")
     ensure_python3(make_default=True, roles=hosts)
 
     # Install Docker
@@ -86,7 +85,7 @@ def monitor(hosts, nets, monitored_role, aggregator_role):
             src="misc/grafana-dashboard.json")
 
     # Display UI URLs to view metrics
-    ui_urls = map(lambda h: f'http://{h.extra["monitor_ip"]}:3000', hosts[aggregator_role])
+    ui_urls = map(lambda h: f'http://{h.extra["monitor_ipv4"]}:3000', hosts[aggregator_role])
     LOG.info(f'View UI at {list(ui_urls)}')
     LOG.info('Connect with `admin` as login and password. '
              'Skip the change password. '

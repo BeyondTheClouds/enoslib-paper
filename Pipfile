@@ -7,15 +7,13 @@ verify_ssl = true
 python_version = "3.8"
 
 [packages]
-enoslib = "==5.3.2"
+# enoslib = "==5.3.2"
+enoslib = {editable = true, git = "git@gitlab.inria.fr:discovery/enoslib.git@6.0.0.alpha-5"}
 scapy = {extras = ["basic"], version = "==2.4.4"}
 pyroute2 = "==0.5.7"
 six = "==1.15.0"
 
 [scripts]
-# setup-aio  = "python ./setup-aio.py"
-# setup-heat = "python ./setup-heat.py"
-# setup-cloud = "python ./setup-cloud.py"
 
 [dev-packages] # Spacemacs deps
 python-language-server = {extras = ["yapf"],version = "*"}

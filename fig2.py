@@ -3,21 +3,17 @@
 
 # Imports
 import inspect
-import scapy.all as scapy
-from scapy.config import conf as scapy_config
 
-from enoslib.api import (get_hosts, discover_networks)
+from enoslib.api import (get_hosts, sync_info)
 from enoslib.infra.provider import Provider
 from enoslib.infra.enos_vagrant.provider      import Enos_vagrant
 from enoslib.infra.enos_vagrant.configuration import Configuration
-from enoslib.types import Network
 
-from enoslib.service import Monitoring, SimpleNetem
+from enoslib.service.emul.netem import Netem
+from enoslib.service.monitoring.monitoring import TIGMonitoring as Monitoring
 
-from utils import (ansible_on, setup_galera, infra, lookup_net,
-                   ifname, Network, LOG)
-
-scapy_config.use_pcap = True
+from utils import (ansible_on, setup_galera, infra,
+                   ifname, LOG, populate_ipv4)
 
 
 # Fig Code
@@ -48,7 +44,7 @@ def experiment(provider, conf, delay, setup):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     LOG.info("Clean resources")
-    # infra.destroy()
+    infra.destroy()
 
 
 
@@ -59,27 +55,28 @@ def monitor(hosts, networks, monitored_role, aggregator_role):
 
     This function uses enoslib Monitoring service
     '''
-    hosts = discover_networks(hosts, networks) # Required to use monitor net
-    m = Monitoring(collector=get_hosts(hosts, aggregator_role),
+    hosts = populate_ipv4(hosts, networks, "monitor") # Required to use monitor net
+    host_ui = get_hosts(hosts, aggregator_role)[0]
+    m = Monitoring(collector=get_hosts(hosts, aggregator_role)[0],
                    agent=get_hosts(hosts, monitored_role),
-                   ui=get_hosts(hosts, aggregator_role),
-                   network='monitor')
+                   ui=host_ui,
+                   networks=networks['monitor'])
     m.deploy()
 
     # Display UI URLs to view metrics
-    ui_urls = map(lambda h: f'http://{h.extra["monitor_ip"]}:3000', get_hosts(hosts, aggregator_role))
-    LOG.info(f'View Monitoring UI at {list(ui_urls)}')
+    LOG.info(f'View Monitoring UI at http://{host_ui.extra["monitor_ipv4"]}:3000')
     LOG.info('Connect with `admin` as login and password. '
              'Skip the change password. '
              'Select `Host Dashboard`.')
+
 
 def set_latency(hosts, networks, delay, role):
     '''Set latency between nodes
 
     This function uses enoslib SimpleNetem service
     '''
-    hosts = discover_networks(hosts, networks) # Required to use RDBMS net
-    netem = SimpleNetem(f"delay {delay}", role, hosts=get_hosts(hosts, role))
+    hosts = sync_info(hosts, networks) # Required to use RDBMS net
+    netem = Netem(f"delay {delay}", hosts=hosts[role], networks=networks[role])
     netem.deploy()
     netem.validate()  # Ensure latency is set as expected
 
