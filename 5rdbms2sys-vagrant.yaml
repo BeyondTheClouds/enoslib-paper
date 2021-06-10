@@ -1,5 +1,6 @@
 ---
 backend: virtualbox
+box: generic/debian10
 
 resources:
   machines:

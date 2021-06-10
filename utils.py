@@ -1,30 +1,28 @@
-from contextlib import contextmanager
-from functools import wraps
-import logging
-import os
 import shutil
+import logging
+import pathlib
+from contextlib import contextmanager
+from ipaddress import IPv4Network
 from typing import List
 
-from pyroute2 import NDB
-from pyroute2 import log as pyroute2log
-
-from enoslib.objects import (Host, Network, Role, Roles)
-from enoslib.api import (play_on, run_ansible, generate_inventory,
-                         gather_facts, get_hosts, ensure_python3,
-                         sync_info)
-from enoslib.infra.enos_vagrant.provider import Enos_vagrant
+import enoslib as elib
+from enoslib.api import (ensure_python3, get_hosts, play_on, run_ansible,
+    sync_info)
 from enoslib.infra.enos_vagrant.configuration import Configuration
+from enoslib.infra.enos_vagrant.provider import Enos_vagrant
+from pr2modules.ndb.main import NDB
 
-
+
 # General stuff
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger('TPDS')
 
 
 # Utils functions
-def setup_galera(hosts: Roles, nets: List[Network],
-                 rdbms_role = 'RDBMS',
-                 sysbench_role = 'client'):
+def setup_galera(
+        rdbms: List[elib.Host],
+        sysbenchs: List[elib.Host],
+        rdbms_nets: List[elib.Network]):
     '''Installs and configures Galera.
 
     This function uses an ansible playbook at `misc/deploy-galera.yml`
@@ -34,17 +32,15 @@ def setup_galera(hosts: Roles, nets: List[Network],
 
     # Get network information and put RDBMS IP into host.extra so they
     # will be passed to Ansible as host_vars.
-    hosts = populate_ipv4(hosts, nets, rdbms_role)
+    hosts = populate_ipv4({'RDBMS': rdbms, 'client': sysbenchs},
+                          {'RDBMS': rdbms_nets}, "RDBMS")
 
     ensure_python3(make_default=True, roles=hosts)
-    run_ansible([galera_ansible_path], roles=hosts, extra_vars={
-        'RDBMS_role': rdbms_role,
-        'SYSBENCH_role': sysbench_role
-    })
+    run_ansible([galera_ansible_path], roles=hosts)
 
 
 @contextmanager
-def ansible_on(hosts: Roles, role: str):
+def ansible_on(hosts: elib.Roles, role: str):
     with play_on(roles=hosts, pattern_hosts=role, gather_facts="all") as playbook:
         yield playbook
 
@@ -75,21 +71,22 @@ def infra(conf: Configuration):
     except Exception as e:
         LOG.error(f'Unexpected error: {e}')
     finally:
-        # Tear down the infra
-        LOG.info('Finished!')
-        LOG.info('Destroying machines...')
-        vagrant_provider.destroy()
+        pass
+        # # Tear down the infra
+        # LOG.info('Finished!')
+        # LOG.info('Destroying machines...')
+        # vagrant_provider.destroy()
 
-        tmp_enoslib_path = '_tmp_enos_'
-        LOG.info(f'Removing cache {tmp_enoslib_path}...')
-        if os.path.isdir(tmp_enoslib_path):
-            shutil.rmtree(tmp_enoslib_path)
+        # tmp_enoslib_path = pathlib.Path('_tmp_enos_')
+        # LOG.info(f'Removing cache {tmp_enoslib_path}...')
+        # if tmp_enoslib_path.is_dir():
+        #     shutil.rmtree(tmp_enoslib_path)
 
 
-def ifname(net: Network) -> str:
+def ifname(net: IPv4Network) -> str:
     'Returns ifname of net/cidr on the current machine'
     ndb = NDB()
-    cidr = format(net.network)  # 192.168.42.0/24
+    cidr = net.with_prefixlen  # 192.168.42.0/24
     cidr_route = ndb.routes[cidr]
     addr_route = f'{cidr_route["prefsrc"]}/{cidr_route["dst_len"]}'
     ifname = ndb.addresses[addr_route]['label']
@@ -97,14 +94,14 @@ def ifname(net: Network) -> str:
 
     return ifname
 
-def populate_ipv4(hosts, nets, net_role):
+def populate_ipv4(hosts: elib.Roles, nets: elib.Networks, net_role):
     '''Discover network info and put it into host.extra so it will be
     passed to Ansible as host_vars.
 
     The ipv4 will be available in ansible with the idiom
     `{{ hostvars[h][net_role + '_ipv4'] }}`
     '''
-    hosts = sync_info(hosts, nets)
+    hosts = elib.sync_info(hosts, nets)
 
     for hs in hosts.values():
         for h in hs:

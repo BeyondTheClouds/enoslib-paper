@@ -28,7 +28,7 @@ about the program execution./
 
 Fig. 3 uses the declarative resources description of
 [[file:5rdbms2sys-vagrant.yaml]] to start the infrastructure.  The
-description tells to provision 3 /database/ machines, 2
+description tells to provision with Debian 10 3 /database/ machines, 2
 /database/client/ machines, 1 /database/ network and 1 /monitor/
 network.
 
@@ -37,16 +37,23 @@ network.
 *** Fig. 4 [[file:fig4.py::15][(link)]]
 : pipenv run python fig4.py
 
-Fig. 4 defines an ~install_galera~ function that installs MariaDB and
-Galera on a list of ~Hosts~.
+Fig. 4 defines a ~setup_galera~ function that relies on ~Roles~ to
+contextualize machines differently.  It installs a MariaDB Galera Cluster on
+one list of ~Hosts~, and Sysbench on another one.
 
 A ~Host~ is an abstract notion of unit of computation that can be
-bound to bare-metal machines, virtual machines or containers.
+bound to bare-metal machines, virtual machines or containers.  A
+~Role~ is a label that identifies ~Hosts~ and ~Networks~ that share
+the same behavior. Thanks to roles, an experimenter can define codes
+that will only be executed on specific resources.
 
-Executing the ~fig4.py~ provisions 2 machines on VirtualBox, and
-executes the ~install_galera~ function.
 
-/Infra requirements: 2 CPUs, 1Go RAM/
+Executing the ~fig6.py~ provisions 2 /database/ machines, and 2
+/database/client/ machines. It then executes the ~setup_galera~
+function that installs MariaDB and Galera on the 4 /database/
+machines, and Sysbench on the 2 /client/ machines.
+
+/Infra requirements: 4 CPUs, 2Go RAM/
 
 *** Fig. 5 [[file:fig5.py::15][(link)]]
 : pipenv run sudo python fig5.py
@@ -64,43 +71,29 @@ private network previously provisioned. Finally, the Python script
 executes the ~analyze_galera~ function. This function builds a
 specific ~pcap~ filter using the CIDR of the ~Network~ in argument.
 The analyze requires ~libpcap~ and ~tcpdump~ under the hood, and so
-needs to be run with ~sudo~, unless your machine is [[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured
-properly]].
+needs to be run with ~sudo~, unless your machine is
+[[https://gist.github.com/zapstar/3d2ff4f345b43ce7918889053503ef84][configured
+properly]]. If the ~libpcap~ is not linked properly, you may run the
+script as follows.
+: pipenv run sudo LD_LIBRARY_PATH=path/to/libpcap/lib python fig5.py
 
 /Vagrant implements private Network in VirtualBox with the/
 /*host-only* [[https://www.virtualbox.org/manual/ch06.html#network_hostonly][adapter]]. In such mode, the traffic between VMs never/
 /leaves VBox. Hence, sniffing from the Host machine is impossible./
 /To bypass this limitation, this example use the [[https://github.com/vagrant-libvirt/vagrant-libvirt][Libvirt]] backend./
 /Someone could also do 'sudo vagrant ssh enos-0-1' and execute the/
-/following tcpdump there/
+/following tcpdump there./
 : tcpdump -i eth1 'tcp and port 4567'
 
 /Infra requirements: 2 CPUs, 1Go RAM/
 
-*** Fig. 6 [[file:fig6.py::14][(link)]]
+*** Fig. 6 [[file:fig6.py::15][(link)]]
 : pipenv run python fig6.py
 
-Fig. 6 defines a ~setup_galera~ function that relies on ~Roles~ to
-contextualize machines differently.
-
-A ~Role~ is a label that identifies ~Hosts~ and ~Networks~ that share
-the same behavior. Thanks to roles, an experimenter can define codes
-that will only be executed on specific resources.
-
-Executing the ~fig6.py~ provisions 2 /database/ machines, and 2
-/database/client/ machines. It then executes the ~setup_galera~
-function that installs MariaDB and Galera on the 4 /database/
-machines, and Sysbench on the 2 /client/ machines.
-
-/Infra requirements: 4 CPUs, 2Go RAM/
-
-*** Fig. 7 [[file:fig7.py::15][(link)]]
-: pipenv run python fig7.py
-
-Fig. 7 exploits Ansible's modules to efficiently define a reusable
+Fig. 6 exploits Ansible's modules to efficiently define a reusable
 monitoring function.
 
-So far, programs use the EnosLib [[https://discovery.gitlabpages.inria.fr/enoslib/apidoc/api.html#enoslib.api.run_command][run_command]] function to contextualize
+So far, programs use the EnosLib [[https://discovery.gitlabpages.inria.fr/enoslib/apidoc/global_api.html#enoslib.api.run][run]] function to contextualize
 resources. This is an easy to use function that performs shell commands on
 machines, but lacks expressivity when it is time to develop complex
 artifacts. This code example uses /modules/ which are reusable scripts

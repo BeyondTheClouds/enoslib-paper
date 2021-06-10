@@ -24,8 +24,8 @@ innodb_log_buffer_size          = 64M
 innodb_log_file_size            = 50M
 
 # In the following we use the `RDBMS` network
-wsrep_cluster_address="gcomm://{% for h in groups[RDBMS_role] -%}
-                                 {{ hostvars[h][RDBMS_role + '_ipv4'] }}{% if not loop.last %},{% endif%}
+wsrep_cluster_address="gcomm://{% for h in groups['RDBMS'] -%}
+                                 {{ hostvars[h]['RDBMS_ipv4'] }}{% if not loop.last %},{% endif%}
                                {%- endfor %}"
 
 # https://mariadb.com/kb/en/library/galera-cluster-system-variables/#wsrep_sync_wait

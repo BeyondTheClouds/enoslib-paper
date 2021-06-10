@@ -7,15 +7,11 @@ verify_ssl = true
 python_version = "3.8"
 
 [packages]
-# enoslib = "==5.3.2"
-enoslib = {editable = true, git = "git@gitlab.inria.fr:discovery/enoslib.git@6.0.0.alpha-5"}
-scapy = {extras = ["basic"], version = "==2.4.4"}
-pyroute2 = "==0.5.7"
-six = "==1.15.0"
+enoslib = "~=6.2.0"
+# enoslib = {editable = true, git = "git@gitlab.inria.fr:discovery/enoslib.git@6.0.0.alpha-5"}
+scapy = {extras = ["basic"], version = "==2.4.5"}
+pyroute2.ndb = "==0.6.4"
+# TODO: remove me
+# six = "==1.15.0"
 
 [scripts]
-
-[dev-packages] # Spacemacs deps
-python-language-server = {extras = ["yapf"],version = "*"}
-pyls-isort = "*"
-pyls-mypy = "*"

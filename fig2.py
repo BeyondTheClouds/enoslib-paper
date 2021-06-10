@@ -2,20 +2,15 @@
 
 
 # Imports
-import inspect
+from typing import List
 
-from enoslib.api import (get_hosts, sync_info)
-from enoslib.infra.provider import Provider
-from enoslib.infra.enos_vagrant.provider      import Enos_vagrant
+import enoslib as elib
+from enoslib.api import sync_info
 from enoslib.infra.enos_vagrant.configuration import Configuration
+from enoslib.infra.enos_vagrant.provider import Enos_vagrant
+from utils import LOG, ansible_on, setup_galera
 
-from enoslib.service.emul.netem import Netem
-from enoslib.service.monitoring.monitoring import TIGMonitoring as Monitoring
 
-from utils import (ansible_on, setup_galera, infra,
-                   ifname, LOG, populate_ipv4)
-
-
 # Fig Code
 def experiment(provider, conf, delay, setup):
     'Fig2. Artifact for the evaluation of distributed RDBMSes'
@@ -24,17 +19,18 @@ def experiment(provider, conf, delay, setup):
     LOG.info("Acquire resources on the testbed")
     infra = provider(conf)
     hosts, networks = infra.init()
+    hosts = sync_info(hosts, networks)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     LOG.info("Install the distributed RDBMS and third party soft")
-    setup(hosts, networks, rdbms_role='RDBMS', sysbench_role='client')
-    monitor(hosts, networks, monitored_role='RDBMS', aggregator_role='client[0]')
+    setup(hosts['RDBMS'], hosts['client'], networks['RDBMS'])
+    monitor(hosts['RDBMS'], hosts['RDBMS'][0], networks['monitor'])
     LOG.info("Configure the infrastructure")
-    set_latency(hosts, networks, delay, role='RDBMS')
+    set_latency(hosts['RDBMS'], networks['RDBMS'], delay)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     LOG.info("Benchmark the distributed RDBMS")
-    exec_sysbench(hosts, role='client')
+    exec_sysbench(hosts['client'])
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     LOG.info("Collect/backup all logs")
@@ -49,38 +45,41 @@ def experiment(provider, conf, delay, setup):
 
 
 # Utils
-def monitor(hosts, networks, monitored_role, aggregator_role):
+def monitor(monitored: List[elib.Host],
+            aggregator: elib.Host,
+            networks: List[elib.Network],):
 
     '''Install monitoring stack.
 
     This function uses enoslib Monitoring service
     '''
-    hosts = populate_ipv4(hosts, networks, "monitor") # Required to use monitor net
-    host_ui = get_hosts(hosts, aggregator_role)[0]
-    m = Monitoring(collector=get_hosts(hosts, aggregator_role)[0],
-                   agent=get_hosts(hosts, monitored_role),
-                   ui=host_ui,
-                   networks=networks['monitor'])
+    host_ui = aggregator
+    m = elib.TIGMonitoring(agent=monitored,
+                           collector=aggregator,
+                           ui=aggregator,
+                           networks=networks)
     m.deploy()
 
     # Display UI URLs to view metrics
-    LOG.info(f'View Monitoring UI at http://{host_ui.extra["monitor_ipv4"]}:3000')
+    ui_addr = next(net.ip for net in host_ui.filter_addresses(networks) if net.ip.version == 4)
+    LOG.info(f'View Monitoring UI at http://{ui_addr.ip}:3000')
     LOG.info('Connect with `admin` as login and password. '
              'Skip the change password. '
              'Select `Host Dashboard`.')
 
 
-def set_latency(hosts, networks, delay, role):
+def set_latency(hs: List[elib.Host], ns: List[elib.Network], delay: str):
     '''Set latency between nodes
 
     This function uses enoslib SimpleNetem service
     '''
-    hosts = sync_info(hosts, networks) # Required to use RDBMS net
-    netem = Netem(f"delay {delay}", hosts=hosts[role], networks=networks[role])
+    # hosts = sync_info(hosts, networks) # Required to use RDBMS net
+    netem = (elib.Netem()
+             .add_constraints(f"delay {delay}", hosts=hs, networks=ns, symetric=True))
     netem.deploy()
     netem.validate()  # Ensure latency is set as expected
 
-def exec_sysbench(hosts, role):
+def exec_sysbench(hs: List[elib.Host]):
     pass
 
 

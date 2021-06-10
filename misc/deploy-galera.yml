@@ -1,7 +1,7 @@
 ---
-- hosts: "{{ RDBMS_role }}"
+- hosts: "RDBMS"
   vars:
-    dbmaster_node: "{{ groups[RDBMS_role][0] }}"
+    dbmaster_node: "{{ groups['RDBMS'][0] }}"
 #---------------------------------------------------------------------
   tasks:
   - name: Install docker
@@ -63,12 +63,12 @@
         MYSQL_ROOT_PASSWORD=my-secret-pw
       command: >
         --wsrep-new-cluster
-        --wsrep_node_address="{{ hostvars[inventory_hostname][RDBMS_role + '_ipv4'] }}"
+        --wsrep_node_address="{{ hostvars[inventory_hostname]['RDBMS_ipv4'] }}"
     when: inventory_hostname == dbmaster_node
 
   - name: Waiting for the MariaDB-Galera first database to be ready
     wait_for:
-      host: "{{ hostvars[dbmaster_node][RDBMS_role + '_ipv4'] }}"
+      host: "{{ hostvars[dbmaster_node]['RDBMS_ipv4'] }}"
       port: 3306
     when: inventory_hostname == dbmaster_node
 
@@ -99,11 +99,11 @@
       volumes:
         - /database-galera/mysql.conf.d:/etc/mysql/conf.d
         - /database-galera/data:/var/lib/mysql
-      command: --wsrep_node_address="{{ hostvars[inventory_hostname][RDBMS_role + '_ipv4'] }}"
+      command: --wsrep_node_address="{{ hostvars[inventory_hostname]['RDBMS_ipv4'] }}"
     when: inventory_hostname != dbmaster_node
 
   - name: Waiting for the MariaDB-Galera other databases to be ready
     wait_for:
-      host: "{{ hostvars[inventory_hostname][RDBMS_role + '_ipv4'] }}"
+      host: "{{ hostvars[inventory_hostname]['RDBMS_ipv4'] }}"
       port: 3306
     when: inventory_hostname != dbmaster_node
