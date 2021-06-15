@@ -19,7 +19,7 @@ def experiment(provider, conf, delay, setup):
     LOG.info("Acquire resources on the testbed")
     infra = provider(conf)
     hosts, networks = infra.init()
-    hosts = sync_info(hosts, networks)
+    hosts = sync_info(hosts, networks)  # Retrieve extra info on hosts
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     LOG.info("Install the distributed RDBMS and third party soft")
